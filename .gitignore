@@ -1,0 +1,23 @@
+# dependencies
+node_modules/
+venv/
+__pycache__/
+*.pyc
+
+# environment variables
+.env
+.env.local
+.env.*.local
+
+# build outputs
+.next/
+dist/
+build/
+
+# system files
+.DS_Store
+Thumbs.db
+
+# editor
+.vscode/
+.idea/
