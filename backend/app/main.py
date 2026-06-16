@@ -1,12 +1,17 @@
 import re
+from datetime import datetime
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from app import models
+from app.database import Base, engine, get_db
+from sqlalchemy.orm import Session
 
 
-app = FastAPI()
+app = FastAPI(title="AI Job Tracker API")
 
+Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,
@@ -29,6 +34,16 @@ class AnalyzeResponse(BaseModel):
     summary: str
     resume_length: int
     job_description_length: int
+
+class SavedAnalysisResponse(BaseModel):
+    id: int
+    resume_text: str
+    job_description: str
+    match_score: int
+    matched_skills: list[str]
+    missing_skills: list[str]
+    summary: str
+    created_at: datetime
 
 
 SKILL_KEYWORDS = {
@@ -64,9 +79,27 @@ def create_summary(match_score: int) -> str:
 def health_check():
     return {"status": "ok"}
 
+@app.get("/analyses", response_model=list[SavedAnalysisResponse])
+def get_saved_analyses(db: Session = Depends(get_db)):
+    saved_analyses = db.query(models.Analysis).order_by(models.Analysis.id.desc()).all()
+
+    return [
+        SavedAnalysisResponse(
+            id=analysis.id,
+            resume_text=analysis.resume_text,
+            job_description=analysis.job_description,
+            match_score=analysis.match_score,
+            matched_skills=analysis.matched_skills,
+            missing_skills=analysis.missing_skills,
+            summary=analysis.summary,
+            created_at=analysis.created_at,
+        )
+        for analysis in saved_analyses
+    ]
+
 
 @app.post("/analyze", response_model=AnalyzeResponse)
-def analyze_job_match(request: AnalyzeRequest):
+def analyze_job_match(request: AnalyzeRequest, db: Session = Depends(get_db)):
     resume_text_lower = request.resume_text.lower()
     job_description_lower = request.job_description.lower()
 
@@ -100,6 +133,19 @@ def analyze_job_match(request: AnalyzeRequest):
         match_score = round((len(matched_skills) / len(required_skills)) * 100)
 
     summary = create_summary(match_score)
+
+    saved_analysis = models.Analysis(
+        resume_text=request.resume_text,
+        job_description=request.job_description,
+        match_score=match_score,
+        matched_skills=matched_skills,
+        missing_skills=missing_skills,
+        summary=summary,
+    )
+
+    db.add(saved_analysis)
+    db.commit()
+    db.refresh(saved_analysis)
 
     return AnalyzeResponse(
         match_score=match_score,

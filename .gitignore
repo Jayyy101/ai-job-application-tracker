@@ -21,3 +21,5 @@ Thumbs.db
 # editor
 .vscode/
 .idea/
+# Local SQLite database
+backend/job_tracker.db
