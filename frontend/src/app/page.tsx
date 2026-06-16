@@ -3,7 +3,10 @@
 import { useState } from "react";
 
 type AnalyzeResponse = {
-  message: string;
+  match_score: number;
+  matched_skills: string[];
+  missing_skills: string[];
+  summary: string;
   resume_length: number;
   job_description_length: number;
 };
@@ -130,25 +133,62 @@ export default function Home() {
           )}
 
           {analysisResult && (
-            <div className="w-full max-w-xl rounded-lg border border-gray-700 bg-gray-900 p-4 text-sm text-gray-200">
-              <h2 className="mb-3 text-lg font-semibold text-white">
-                Backend Response
+            <div className="w-full max-w-xl rounded-lg border border-gray-700 bg-gray-900 p-5 text-sm text-gray-200">
+              <h2 className="mb-4 text-xl font-semibold text-white">
+                Match Analysis
               </h2>
 
-              <p>
-                <span className="font-semibold">Message:</span>{" "}
-                {analysisResult.message}
-              </p>
+              <div className="mb-4 rounded-lg border border-blue-500 bg-blue-950 p-4">
+                <p className="text-sm text-blue-200">Match Score</p>
+                <p className="text-3xl font-bold text-white">
+                  {analysisResult.match_score}%
+                </p>
+              </div>
 
-              <p>
-                <span className="font-semibold">Resume length:</span>{" "}
-                {analysisResult.resume_length} characters
-              </p>
+              <div className="mb-4">
+                <p className="font-semibold text-white">Summary</p>
+                <p className="mt-1 text-gray-300">{analysisResult.summary}</p>
+              </div>
 
-              <p>
-                <span className="font-semibold">Job description length:</span>{" "}
-                {analysisResult.job_description_length} characters
-              </p>
+              <div className="mb-4">
+                <p className="font-semibold text-white">Matched Skills</p>
+
+                {analysisResult.matched_skills.length > 0 ? (
+                  <ul className="mt-2 list-inside list-disc text-green-300">
+                    {analysisResult.matched_skills.map((skill) => (
+                      <li key={skill}>{skill}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-1 text-gray-400">No matched skills found.</p>
+                )}
+              </div>
+
+              <div className="mb-4">
+                <p className="font-semibold text-white">Missing Skills</p>
+
+                {analysisResult.missing_skills.length > 0 ? (
+                  <ul className="mt-2 list-inside list-disc text-red-300">
+                    {analysisResult.missing_skills.map((skill) => (
+                      <li key={skill}>{skill}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-1 text-gray-400">No missing skills found.</p>
+                )}
+              </div>
+
+              <div className="border-t border-gray-700 pt-4 text-gray-400">
+                <p>
+                  <span className="font-semibold">Resume length:</span>{" "}
+                  {analysisResult.resume_length} characters
+                </p>
+
+                <p>
+                  <span className="font-semibold">Job description length:</span>{" "}
+                  {analysisResult.job_description_length} characters
+                </p>
+              </div>
             </div>
           )}
         </section>
