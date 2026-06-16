@@ -2,18 +2,65 @@
 
 import { useState } from "react";
 
+type AnalyzeResponse = {
+  message: string;
+  resume_length: number;
+  job_description_length: number;
+};
+
 export default function Home() {
   const [resumeText, setResumeText] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [message, setMessage] = useState("");
 
-  function handleAnalyze() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [analysisResult, setAnalysisResult] = useState<AnalyzeResponse | null>(
+    null
+  );
+
+  async function handleAnalyze() {
+    setMessage("");
+    setErrorMessage("");
+    setAnalysisResult(null);
+
     if (resumeText.trim() === "" || jobDescription.trim() === "") {
-      setMessage("Please fill in both the resume and job description before analyzing.");
+      setErrorMessage(
+        "Please fill in both the resume and job description before analyzing."
+      );
       return;
     }
 
-    setMessage("Both fields are filled. Match analysis will be added in a future milestone.");
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          resume_text: resumeText,
+          job_description: jobDescription,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      const data: AnalyzeResponse = await response.json();
+
+      setAnalysisResult(data);
+      setMessage("Backend response received successfully.");
+    } catch (error) {
+      console.error(error);
+      setErrorMessage(
+        "Could not connect to the backend. Make sure FastAPI is running."
+      );
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -64,15 +111,45 @@ export default function Home() {
           <button
             type="button"
             onClick={handleAnalyze}
-            className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-500"
+            disabled={isLoading}
+            className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-gray-600"
           >
-            Analyze Match
+            {isLoading ? "Analyzing..." : "Analyze Match"}
           </button>
 
           {message && (
             <p className="max-w-xl text-center text-sm text-gray-300">
               {message}
             </p>
+          )}
+
+          {errorMessage && (
+            <p className="max-w-xl rounded-lg border border-red-500 bg-red-950 px-4 py-3 text-center text-sm text-red-200">
+              {errorMessage}
+            </p>
+          )}
+
+          {analysisResult && (
+            <div className="w-full max-w-xl rounded-lg border border-gray-700 bg-gray-900 p-4 text-sm text-gray-200">
+              <h2 className="mb-3 text-lg font-semibold text-white">
+                Backend Response
+              </h2>
+
+              <p>
+                <span className="font-semibold">Message:</span>{" "}
+                {analysisResult.message}
+              </p>
+
+              <p>
+                <span className="font-semibold">Resume length:</span>{" "}
+                {analysisResult.resume_length} characters
+              </p>
+
+              <p>
+                <span className="font-semibold">Job description length:</span>{" "}
+                {analysisResult.job_description_length} characters
+              </p>
+            </div>
           )}
         </section>
       </div>
