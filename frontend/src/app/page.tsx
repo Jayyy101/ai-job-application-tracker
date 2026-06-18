@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type AnalyzeResponse = {
   match_score: number;
@@ -9,6 +9,17 @@ type AnalyzeResponse = {
   summary: string;
   resume_length: number;
   job_description_length: number;
+};
+
+type SavedAnalysis = {
+  id: number;
+  resume_text: string;
+  job_description: string;
+  match_score: number;
+  matched_skills: string[];
+  missing_skills: string[];
+  summary: string;
+  created_at: string;
 };
 
 export default function Home() {
@@ -21,6 +32,31 @@ export default function Home() {
   const [analysisResult, setAnalysisResult] = useState<AnalyzeResponse | null>(
     null
   );
+
+  const [savedAnalyses, setSavedAnalyses] = useState<SavedAnalysis[]>([]);
+
+  const fetchSavedAnalyses = useCallback(async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/analyses");
+
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      const data: SavedAnalysis[] = await response.json();
+
+      setSavedAnalyses(data);
+    } catch (error) {
+      console.error(error);
+      setErrorMessage(
+        "Could not load saved analyses. Make sure FastAPI is running."
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSavedAnalyses();
+  }, [fetchSavedAnalyses]);
 
   async function handleAnalyze() {
     setMessage("");
@@ -56,6 +92,8 @@ export default function Home() {
 
       setAnalysisResult(data);
       setMessage("Backend response received successfully.");
+
+      await fetchSavedAnalyses()
     } catch (error) {
       console.error(error);
       setErrorMessage(
@@ -189,6 +227,116 @@ export default function Home() {
                   {analysisResult.job_description_length} characters
                 </p>
               </div>
+            </div>
+          )}
+        </section>
+
+        <section className="rounded-lg border border-gray-800 bg-gray-900 p-6">
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold text-white">Saved Analyses</h2>
+              <p className="mt-1 text-sm text-gray-400">
+                Previous resume and job description match results saved in the database.
+              </p>
+            </div>
+
+            <p className="text-sm text-gray-400">
+              {savedAnalyses.length} saved
+            </p>
+          </div>
+
+          {savedAnalyses.length === 0 ? (
+            <p className="rounded-lg border border-gray-700 bg-gray-950 p-4 text-sm text-gray-400">
+              No saved analyses yet. Submit your first analysis to see it here.
+            </p>
+          ) : (
+            <div className="grid gap-4">
+              {savedAnalyses.map((analysis) => (
+                <article
+                  key={analysis.id}
+                  className="rounded-lg border border-gray-700 bg-gray-950 p-5"
+                >
+                  <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm text-gray-400">Match Score</p>
+                      <p className="text-2xl font-bold text-blue-400">
+                        {analysis.match_score}%
+                      </p>
+                    </div>
+
+                    <p className="text-sm text-gray-500">
+                      {new Date(analysis.created_at).toLocaleString()}
+                    </p>
+                  </div>
+
+                  <div className="mb-4">
+                    <p className="font-semibold text-white">Summary</p>
+                    <p className="mt-1 text-sm text-gray-300">{analysis.summary}</p>
+                  </div>
+
+                  <div className="mb-4 grid gap-4 md:grid-cols-2">
+                    <div>
+                      <p className="font-semibold text-white">Matched Skills</p>
+
+                      {analysis.matched_skills.length > 0 ? (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {analysis.matched_skills.map((skill) => (
+                            <span
+                              key={skill}
+                              className="rounded-full border border-green-700 bg-green-950 px-3 py-1 text-xs text-green-300"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="mt-1 text-sm text-gray-500">
+                          No matched skills found.
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <p className="font-semibold text-white">Missing Skills</p>
+
+                      {analysis.missing_skills.length > 0 ? (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {analysis.missing_skills.map((skill) => (
+                            <span
+                              key={skill}
+                              className="rounded-full border border-red-700 bg-red-950 px-3 py-1 text-xs text-red-300"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="mt-1 text-sm text-gray-500">
+                          No missing skills found.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 border-t border-gray-800 pt-4 md:grid-cols-2">
+                    <div>
+                      <p className="font-semibold text-white">Resume Preview</p>
+                      <p className="mt-1 text-sm text-gray-400">
+                        {analysis.resume_text.slice(0, 160)}
+                        {analysis.resume_text.length > 160 ? "..." : ""}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="font-semibold text-white">Job Description Preview</p>
+                      <p className="mt-1 text-sm text-gray-400">
+                        {analysis.job_description.slice(0, 160)}
+                        {analysis.job_description.length > 160 ? "..." : ""}
+                      </p>
+                    </div>
+                  </div>
+                </article>
+              ))}
             </div>
           )}
         </section>
