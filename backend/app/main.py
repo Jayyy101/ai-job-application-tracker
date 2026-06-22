@@ -1,5 +1,5 @@
 import re
-from datetime import datetime
+from datetime import datetime, date
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,6 +26,13 @@ class AnalyzeRequest(BaseModel):
     resume_text: str
     job_description: str
 
+    company_name: str | None = None
+    job_title: str | None = None
+    job_link: str | None = None
+    application_status: str = "Interested"
+    notes: str | None = None
+    follow_up_date: date | None = None
+
 
 class AnalyzeResponse(BaseModel):
     match_score: int
@@ -35,14 +42,32 @@ class AnalyzeResponse(BaseModel):
     resume_length: int
     job_description_length: int
 
+    company_name: str | None = None
+    job_title: str | None = None
+    job_link: str | None = None
+    application_status: str
+    notes: str | None = None
+    follow_up_date: date | None = None
+
+
 class SavedAnalysisResponse(BaseModel):
     id: int
+
     resume_text: str
     job_description: str
+
+    company_name: str | None = None
+    job_title: str | None = None
+    job_link: str | None = None
+    application_status: str
+    notes: str | None = None
+    follow_up_date: date | None = None
+
     match_score: int
     matched_skills: list[str]
     missing_skills: list[str]
     summary: str
+
     created_at: datetime
 
 
@@ -79,6 +104,7 @@ def create_summary(match_score: int) -> str:
 def health_check():
     return {"status": "ok"}
 
+
 @app.get("/analyses", response_model=list[SavedAnalysisResponse])
 def get_saved_analyses(db: Session = Depends(get_db)):
     saved_analyses = db.query(models.Analysis).order_by(models.Analysis.id.desc()).all()
@@ -88,6 +114,14 @@ def get_saved_analyses(db: Session = Depends(get_db)):
             id=analysis.id,
             resume_text=analysis.resume_text,
             job_description=analysis.job_description,
+
+            company_name=analysis.company_name,
+            job_title=analysis.job_title,
+            job_link=analysis.job_link,
+            application_status=analysis.application_status,
+            notes=analysis.notes,
+            follow_up_date=analysis.follow_up_date,
+
             match_score=analysis.match_score,
             matched_skills=analysis.matched_skills,
             missing_skills=analysis.missing_skills,
@@ -137,6 +171,14 @@ def analyze_job_match(request: AnalyzeRequest, db: Session = Depends(get_db)):
     saved_analysis = models.Analysis(
         resume_text=request.resume_text,
         job_description=request.job_description,
+
+        company_name=request.company_name,
+        job_title=request.job_title,
+        job_link=request.job_link,
+        application_status=request.application_status,
+        notes=request.notes,
+        follow_up_date=request.follow_up_date,
+
         match_score=match_score,
         matched_skills=matched_skills,
         missing_skills=missing_skills,
@@ -154,4 +196,11 @@ def analyze_job_match(request: AnalyzeRequest, db: Session = Depends(get_db)):
         summary=summary,
         resume_length=len(request.resume_text),
         job_description_length=len(request.job_description),
+
+        company_name=request.company_name,
+        job_title=request.job_title,
+        job_link=request.job_link,
+        application_status=request.application_status,
+        notes=request.notes,
+        follow_up_date=request.follow_up_date,
     )

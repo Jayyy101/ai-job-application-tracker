@@ -9,22 +9,46 @@ type AnalyzeResponse = {
   summary: string;
   resume_length: number;
   job_description_length: number;
+
+  company_name: string | null;
+  job_title: string | null;
+  job_link: string | null;
+  application_status: string;
+  notes: string | null;
+  follow_up_date: string | null;
 };
 
 type SavedAnalysis = {
   id: number;
   resume_text: string;
   job_description: string;
+
+  company_name: string | null;
+  job_title: string | null;
+  job_link: string | null;
+  application_status: string;
+  notes: string | null;
+  follow_up_date: string | null;
+
   match_score: number;
   matched_skills: string[];
   missing_skills: string[];
   summary: string;
+
   created_at: string;
 };
 
 export default function Home() {
   const [resumeText, setResumeText] = useState("");
   const [jobDescription, setJobDescription] = useState("");
+
+  const [companyName, setCompanyName] = useState("");
+  const [jobTitle, setJobTitle] = useState("");
+  const [jobLink, setJobLink] = useState("");
+  const [applicationStatus, setApplicationStatus] = useState("Interested");
+  const [notes, setNotes] = useState("");
+  const [followUpDate, setFollowUpDate] = useState("");
+
   const [message, setMessage] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
@@ -55,8 +79,38 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    fetchSavedAnalyses();
-  }, [fetchSavedAnalyses]);
+    let shouldIgnore = false;
+
+    async function loadSavedAnalyses() {
+      try {
+        const response = await fetch("http://127.0.0.1:8000/analyses");
+
+        if (!response.ok) {
+          throw new Error(`Request failed with status ${response.status}`);
+        }
+
+        const data: SavedAnalysis[] = await response.json();
+
+        if (!shouldIgnore) {
+          setSavedAnalyses(data);
+        }
+      } catch (error) {
+        console.error(error);
+
+        if (!shouldIgnore) {
+          setErrorMessage(
+            "Could not load saved analyses. Make sure FastAPI is running."
+          );
+        }
+      }
+    }
+
+    loadSavedAnalyses();
+
+    return () => {
+      shouldIgnore = true;
+    };
+  }, []);
 
   async function handleAnalyze() {
     setMessage("");
@@ -81,6 +135,13 @@ export default function Home() {
         body: JSON.stringify({
           resume_text: resumeText,
           job_description: jobDescription,
+
+          company_name: companyName || null,
+          job_title: jobTitle || null,
+          job_link: jobLink || null,
+          application_status: applicationStatus,
+          notes: notes || null,
+          follow_up_date: followUpDate || null,
         }),
       });
 
@@ -93,7 +154,7 @@ export default function Home() {
       setAnalysisResult(data);
       setMessage("Backend response received successfully.");
 
-      await fetchSavedAnalyses()
+      await fetchSavedAnalyses();
     } catch (error) {
       console.error(error);
       setErrorMessage(
@@ -102,6 +163,19 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  function clearForm() {
+    setCompanyName("");
+    setJobTitle("");
+    setJobLink("");
+    setApplicationStatus("Interested");
+    setNotes("");
+    setFollowUpDate("");
+    setResumeText("");
+    setJobDescription("");
+    setErrorMessage("");
+    setMessage("");
   }
 
   return (
@@ -118,46 +192,138 @@ export default function Home() {
           </p>
         </section>
 
-        <section className="grid gap-6 md:grid-cols-2">
-          <div className="flex flex-col gap-3">
-            <label htmlFor="resume" className="text-lg font-semibold">
-              Resume
-            </label>
+        <section className="mx-auto mt-10 w-full max-w-6xl rounded-2xl border border-slate-700 bg-slate-900/60 p-6 shadow-lg">
+          <h2 className="mb-6 text-2xl font-bold text-white">Job Details</h2>
 
-            <textarea
-              id="resume"
-              value={resumeText}
-              onChange={(event) => setResumeText(event.target.value)}
-              placeholder="Paste your resume here..."
-              className="min-h-72 rounded-lg border border-gray-700 bg-gray-900 p-4 text-sm text-white outline-none placeholder:text-gray-500 focus:border-blue-500"
-            />
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-300">
+                Company Name
+              </label>
+              <input
+                type="text"
+                value={companyName}
+                onChange={(event) => setCompanyName(event.target.value)}
+                placeholder="Example: OpenAI"
+                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-300">
+                Job Title
+              </label>
+              <input
+                type="text"
+                value={jobTitle}
+                onChange={(event) => setJobTitle(event.target.value)}
+                placeholder="Example: Software Engineer"
+                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-300">
+                Job Link
+              </label>
+              <input
+                type="url"
+                value={jobLink}
+                onChange={(event) => setJobLink(event.target.value)}
+                placeholder="https://example.com/job"
+                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-300">
+                Application Status
+              </label>
+              <select
+                value={applicationStatus}
+                onChange={(event) => setApplicationStatus(event.target.value)}
+                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              >
+                <option value="Interested">Interested</option>
+                <option value="Applied">Applied</option>
+                <option value="Interviewing">Interviewing</option>
+                <option value="Offer">Offer</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-300">
+                Follow-up Date
+              </label>
+              <input
+                type="date"
+                value={followUpDate}
+                onChange={(event) => setFollowUpDate(event.target.value)}
+                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-300">
+                Notes
+              </label>
+              <textarea
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                placeholder="Add notes about this role, referral, or follow-up plan."
+                className="min-h-28 w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              />
+            </div>
           </div>
 
-          <div className="flex flex-col gap-3">
-            <label htmlFor="job-description" className="text-lg font-semibold">
-              Job Description
-            </label>
+          <div className="mt-8 grid gap-6 lg:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-xl font-bold text-white">
+                Resume
+              </label>
+              <textarea
+                value={resumeText}
+                onChange={(event) => setResumeText(event.target.value)}
+                placeholder="Paste your resume text here..."
+                className="min-h-72 w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              />
+            </div>
 
-            <textarea
-              id="job-description"
-              value={jobDescription}
-              onChange={(event) => setJobDescription(event.target.value)}
-              placeholder="Paste the job description here..."
-              className="min-h-72 rounded-lg border border-gray-700 bg-gray-900 p-4 text-sm text-white outline-none placeholder:text-gray-500 focus:border-blue-500"
-            />
+            <div>
+              <label className="mb-2 block text-xl font-bold text-white">
+                Job Description
+              </label>
+              <textarea
+                value={jobDescription}
+                onChange={(event) => setJobDescription(event.target.value)}
+                placeholder="Paste the job description here..."
+                className="min-h-72 w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              />
+            </div>
+          </div>
+
+          <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <button
+              type="button"
+              onClick={handleAnalyze}
+              disabled={isLoading}
+              className="rounded-xl bg-blue-600 px-10 py-4 text-lg font-bold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-blue-900"
+            >
+              {isLoading ? "Analyzing..." : "Analyze Match"}
+            </button>
+
+            <button
+              type="button"
+              onClick={clearForm}
+              className="rounded-xl border border-slate-600 px-10 py-4 text-lg font-bold text-slate-200 transition hover:border-slate-400 hover:bg-slate-800"
+            >
+              Clear Form
+            </button>
           </div>
         </section>
 
         <section className="flex flex-col items-center gap-4">
-          <button
-            type="button"
-            onClick={handleAnalyze}
-            disabled={isLoading}
-            className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-gray-600"
-          >
-            {isLoading ? "Analyzing..." : "Analyze Match"}
-          </button>
-
           {message && (
             <p className="max-w-xl text-center text-sm text-gray-300">
               {message}
@@ -256,6 +422,59 @@ export default function Home() {
                   key={analysis.id}
                   className="rounded-lg border border-gray-700 bg-gray-950 p-5"
                 >
+                  <div className="mb-5 border-b border-slate-700 pb-5">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-slate-400">Job Application</p>
+                        <h3 className="mt-1 text-xl font-bold text-white">
+                          {analysis.job_title || "Untitled Role"}
+                        </h3>
+                        <p className="mt-1 text-slate-300">
+                          {analysis.company_name || "Unknown Company"}
+                        </p>
+
+                        {analysis.job_link && (
+                          <a
+                            href={analysis.job_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-2 inline-block text-sm font-medium text-blue-400 hover:text-blue-300 hover:underline"
+                          >
+                            View job posting
+                          </a>
+                        )}
+                      </div>
+
+                      <div className="w-fit rounded-full border border-blue-500/40 bg-blue-500/10 px-4 py-2 text-sm font-semibold text-blue-300">
+                        {analysis.application_status}
+                      </div>
+                    </div>
+
+                    {(analysis.follow_up_date || analysis.notes) && (
+                      <div className="mt-4 grid gap-3 md:grid-cols-2">
+                        {analysis.follow_up_date && (
+                          <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                              Follow-up Date
+                            </p>
+                            <p className="mt-1 text-sm text-slate-200">
+                              {new Date(`${analysis.follow_up_date}T00:00:00`).toLocaleDateString()}
+                            </p>
+                          </div>
+                        )}
+
+                        {analysis.notes && (
+                          <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                              Notes
+                            </p>
+                            <p className="mt-1 text-sm text-slate-200">{analysis.notes}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  
                   <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="text-sm text-gray-400">Match Score</p>
