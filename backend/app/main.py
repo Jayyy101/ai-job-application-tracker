@@ -5,6 +5,7 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from app import models
+from app.ai_service import analyze_resume_with_ai
 from app.database import Base, engine, get_db
 from sqlalchemy.orm import Session
 
@@ -39,6 +40,9 @@ class AnalyzeResponse(BaseModel):
     matched_skills: list[str]
     missing_skills: list[str]
     summary: str
+    strengths: list[str]
+    improvement_suggestions: list[str]
+    honesty_notes: list[str]
     resume_length: int
     job_description_length: int
 
@@ -67,6 +71,9 @@ class SavedAnalysisResponse(BaseModel):
     matched_skills: list[str]
     missing_skills: list[str]
     summary: str
+    strengths: list[str]
+    improvement_suggestions: list[str]
+    honesty_notes: list[str]
 
     created_at: datetime
 
@@ -126,6 +133,9 @@ def get_saved_analyses(db: Session = Depends(get_db)):
             matched_skills=analysis.matched_skills,
             missing_skills=analysis.missing_skills,
             summary=analysis.summary,
+            strengths=analysis.strengths,
+            improvement_suggestions=analysis.improvement_suggestions,
+            honesty_notes=analysis.honesty_notes,
             created_at=analysis.created_at,
         )
         for analysis in saved_analyses
@@ -134,39 +144,20 @@ def get_saved_analyses(db: Session = Depends(get_db)):
 
 @app.post("/analyze", response_model=AnalyzeResponse)
 def analyze_job_match(request: AnalyzeRequest, db: Session = Depends(get_db)):
-    resume_text_lower = request.resume_text.lower()
-    job_description_lower = request.job_description.lower()
+    analysis_result = analyze_resume_with_ai(
+        resume_text=request.resume_text,
+        job_description=request.job_description,
+        company_name=request.company_name,
+        job_title=request.job_title,
+    )
 
-    required_skills = []
-
-    for skill, keywords in SKILL_KEYWORDS.items():
-        for keyword in keywords:
-            if contains_keyword(job_description_lower, keyword):
-                required_skills.append(skill)
-                break
-
-    matched_skills = []
-
-    for skill in required_skills:
-        keywords = SKILL_KEYWORDS[skill]
-
-        for keyword in keywords:
-            if contains_keyword(resume_text_lower, keyword):
-                matched_skills.append(skill)
-                break
-
-    missing_skills = []
-
-    for skill in required_skills:
-        if skill not in matched_skills:
-            missing_skills.append(skill)
-
-    if len(required_skills) == 0:
-        match_score = 0
-    else:
-        match_score = round((len(matched_skills) / len(required_skills)) * 100)
-
-    summary = create_summary(match_score)
+    match_score = analysis_result["match_score"]
+    matched_skills = analysis_result["matched_skills"]
+    missing_skills = analysis_result["missing_skills"]
+    summary = analysis_result["summary"]
+    strengths = analysis_result["strengths"]
+    improvement_suggestions = analysis_result["improvement_suggestions"]
+    honesty_notes = analysis_result["honesty_notes"]
 
     saved_analysis = models.Analysis(
         resume_text=request.resume_text,
@@ -183,6 +174,9 @@ def analyze_job_match(request: AnalyzeRequest, db: Session = Depends(get_db)):
         matched_skills=matched_skills,
         missing_skills=missing_skills,
         summary=summary,
+        strengths=strengths,
+        improvement_suggestions=improvement_suggestions,
+        honesty_notes=honesty_notes,
     )
 
     db.add(saved_analysis)
@@ -194,6 +188,9 @@ def analyze_job_match(request: AnalyzeRequest, db: Session = Depends(get_db)):
         matched_skills=matched_skills,
         missing_skills=missing_skills,
         summary=summary,
+        strengths=strengths,
+        improvement_suggestions=improvement_suggestions,
+        honesty_notes=honesty_notes,
         resume_length=len(request.resume_text),
         job_description_length=len(request.job_description),
 

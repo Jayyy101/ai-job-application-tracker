@@ -7,6 +7,9 @@ type AnalyzeResponse = {
   matched_skills: string[];
   missing_skills: string[];
   summary: string;
+  strengths: string[];
+  improvement_suggestions: string[];
+  honesty_notes: string[];
   resume_length: number;
   job_description_length: number;
 
@@ -34,6 +37,9 @@ type SavedAnalysis = {
   matched_skills: string[];
   missing_skills: string[];
   summary: string;
+  strengths: string[];
+  improvement_suggestions: string[];
+  honesty_notes: string[];
 
   created_at: string;
 };
@@ -382,6 +388,56 @@ export default function Home() {
                 )}
               </div>
 
+              <div className="mb-4">
+                <p className="font-semibold text-white">Strengths</p>
+
+                {analysisResult.strengths.length > 0 ? (
+                  <ul className="mt-2 list-inside list-disc text-blue-300">
+                    {analysisResult.strengths.map((strength) => (
+                      <li key={strength}>{strength}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-1 text-gray-400">No strengths found.</p>
+                )}
+              </div>
+
+              <div className="mb-4">
+                <p className="font-semibold text-white">
+                  Improvement Suggestions
+                </p>
+
+                {analysisResult.improvement_suggestions.length > 0 ? (
+                  <ul className="mt-2 list-inside list-disc text-yellow-300">
+                    {analysisResult.improvement_suggestions.map(
+                      (suggestion) => (
+                        <li key={suggestion}>{suggestion}</li>
+                      )
+                    )}
+                  </ul>
+                ) : (
+                  <p className="mt-1 text-gray-400">
+                    No improvement suggestions found.
+                  </p>
+                )}
+              </div>
+
+              <div className="mb-4 rounded-lg border border-orange-700 bg-orange-950/40 p-4">
+                <p className="font-semibold text-orange-200">Honesty Notes</p>
+
+                {analysisResult.honesty_notes.length > 0 ? (
+                  <ul className="mt-2 list-inside list-disc text-orange-200">
+                    {analysisResult.honesty_notes.map((note) => (
+                      <li key={note}>{note}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-1 text-orange-200">
+                    No honesty notes found.
+                  </p>
+                )}
+              </div>
+
               <div className="border-t border-gray-700 pt-4 text-gray-400">
                 <p>
                   <span className="font-semibold">Resume length:</span>{" "}
@@ -532,6 +588,62 @@ export default function Home() {
                       ) : (
                         <p className="mt-1 text-sm text-gray-500">
                           No missing skills found.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mb-4 grid gap-4 border-t border-gray-800 pt-4 md:grid-cols-3">
+                    <div>
+                      <p className="font-semibold text-white">Strengths</p>
+
+                      {analysis.strengths.length > 0 ? (
+                        <ul className="mt-2 list-inside list-disc text-sm text-blue-300">
+                          {analysis.strengths.map((strength) => (
+                            <li key={strength}>{strength}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="mt-1 text-sm text-gray-500">
+                          No strengths found.
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <p className="font-semibold text-white">
+                        Improvement Suggestions
+                      </p>
+
+                      {analysis.improvement_suggestions.length > 0 ? (
+                        <ul className="mt-2 list-inside list-disc text-sm text-yellow-300">
+                          {analysis.improvement_suggestions.map(
+                            (suggestion) => (
+                              <li key={suggestion}>{suggestion}</li>
+                            )
+                          )}
+                        </ul>
+                      ) : (
+                        <p className="mt-1 text-sm text-gray-500">
+                          No improvement suggestions found.
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="rounded-lg border border-orange-800 bg-orange-950/30 p-3">
+                      <p className="font-semibold text-orange-200">
+                        Honesty Notes
+                      </p>
+
+                      {analysis.honesty_notes.length > 0 ? (
+                        <ul className="mt-2 list-inside list-disc text-sm text-orange-200">
+                          {analysis.honesty_notes.map((note) => (
+                            <li key={note}>{note}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="mt-1 text-sm text-orange-200">
+                          No honesty notes found.
                         </p>
                       )}
                     </div>

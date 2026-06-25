@@ -23,3 +23,6 @@ Thumbs.db
 .idea/
 # Local SQLite database
 backend/job_tracker.db
+
+.env
+backend/.env
