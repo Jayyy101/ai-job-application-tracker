@@ -1,5 +1,6 @@
 import { FeedbackList } from "@/components/FeedbackList";
 import { SkillTagList } from "@/components/SkillTagList";
+import { SuggestedBulletList } from "@/components/SuggestedBulletList";
 import type { AnalyzeResponse } from "@/types/analysis";
 
 type CurrentAnalysisCardProps = {
@@ -102,6 +103,10 @@ export function CurrentAnalysisCard({ analysis }: CurrentAnalysisCardProps) {
           boxed
         />
       </div>
+
+      <SuggestedBulletList
+        suggestions={analysis.suggested_bullet_improvements}
+      />
 
       {analysis.notes && (
         <div className="mb-6 rounded-xl border border-slate-700 bg-slate-950/60 p-4">

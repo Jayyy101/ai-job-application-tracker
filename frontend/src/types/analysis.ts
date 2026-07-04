@@ -1,3 +1,10 @@
+export type SuggestedBulletImprovement = {
+    original_bullet_or_source_detail: string;
+    improved_bullet: string;
+    why_it_is_better: string;
+    evidence_used: string;
+    honesty_check: string;
+}
 export type AnalyzeResponse = {
     match_score: number;
     matched_skills: string[];
@@ -6,6 +13,7 @@ export type AnalyzeResponse = {
     strengths: string[];
     improvement_suggestions: string[];
     honesty_notes: string[];
+    suggested_bullet_improvements: SuggestedBulletImprovement[];
     resume_length: number;
     job_description_length: number;
 
@@ -36,6 +44,7 @@ export type SavedAnalysis = {
     strengths: string[];
     improvement_suggestions: string[];
     honesty_notes: string[];
+    suggested_bullet_improvements: SuggestedBulletImprovement[];
 
     created_at: string;
 };

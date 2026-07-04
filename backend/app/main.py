@@ -34,6 +34,13 @@ class AnalyzeRequest(BaseModel):
     notes: str | None = None
     follow_up_date: date | None = None
 
+class SuggestedBulletImprovementResponse(BaseModel):
+    original_bullet_or_source_detail: str
+    improved_bullet: str
+    why_it_is_better: str
+    evidence_used: str
+    honesty_check: str
+
 
 class AnalyzeResponse(BaseModel):
     match_score: int
@@ -43,6 +50,7 @@ class AnalyzeResponse(BaseModel):
     strengths: list[str]
     improvement_suggestions: list[str]
     honesty_notes: list[str]
+    suggested_bullet_improvements: list[SuggestedBulletImprovementResponse]
     resume_length: int
     job_description_length: int
 
@@ -74,6 +82,7 @@ class SavedAnalysisResponse(BaseModel):
     strengths: list[str]
     improvement_suggestions: list[str]
     honesty_notes: list[str]
+    suggested_bullet_improvements: list[SuggestedBulletImprovementResponse]
 
     created_at: datetime
 
@@ -136,6 +145,7 @@ def get_saved_analyses(db: Session = Depends(get_db)):
             strengths=analysis.strengths,
             improvement_suggestions=analysis.improvement_suggestions,
             honesty_notes=analysis.honesty_notes,
+            suggested_bullet_improvements=analysis.suggested_bullet_improvements,
             created_at=analysis.created_at,
         )
         for analysis in saved_analyses
@@ -158,6 +168,7 @@ def analyze_job_match(request: AnalyzeRequest, db: Session = Depends(get_db)):
     strengths = analysis_result["strengths"]
     improvement_suggestions = analysis_result["improvement_suggestions"]
     honesty_notes = analysis_result["honesty_notes"]
+    suggested_bullet_improvements = analysis_result["suggested_bullet_improvements"]
 
     saved_analysis = models.Analysis(
         resume_text=request.resume_text,
@@ -177,6 +188,7 @@ def analyze_job_match(request: AnalyzeRequest, db: Session = Depends(get_db)):
         strengths=strengths,
         improvement_suggestions=improvement_suggestions,
         honesty_notes=honesty_notes,
+        suggested_bullet_improvements=suggested_bullet_improvements,
     )
 
     db.add(saved_analysis)
@@ -191,6 +203,7 @@ def analyze_job_match(request: AnalyzeRequest, db: Session = Depends(get_db)):
         strengths=strengths,
         improvement_suggestions=improvement_suggestions,
         honesty_notes=honesty_notes,
+        suggested_bullet_improvements=suggested_bullet_improvements,
         resume_length=len(request.resume_text),
         job_description_length=len(request.job_description),
 

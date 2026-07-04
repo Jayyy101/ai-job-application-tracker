@@ -1,5 +1,6 @@
 import { FeedbackList } from "@/components/FeedbackList";
 import { SkillTagList } from "@/components/SkillTagList";
+import { SuggestedBulletList } from "./SuggestedBulletList";
 import type { SavedAnalysis } from "@/types/analysis";
 
 type SavedAnalysisCardProps = {
@@ -141,6 +142,10 @@ export function SavedAnalysisCard({ analysis }: SavedAnalysisCardProps) {
           boxed
         />
       </div>
+
+      <SuggestedBulletList
+        suggestions={analysis.suggested_bullet_improvements}
+      />
 
       <details className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
         <summary className="cursor-pointer text-sm font-semibold text-slate-300 hover:text-white">

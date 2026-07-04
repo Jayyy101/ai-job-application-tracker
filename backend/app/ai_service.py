@@ -8,6 +8,29 @@ from pydantic import BaseModel, Field
 
 load_dotenv()
 
+class SuggestedBulletImprovement(BaseModel):
+    """
+    A single honest resume bullet improvement suggestion.
+
+    The AI should improve wording only using evidence from the provided 
+    resume text and job description. It should not invent fake experience.
+    """
+    original_bullet_or_source_detail: str = Field(
+        description="The original resume bullet or source detail the suggestion is based on."
+    )
+    improved_bullet: str = Field(
+        description="A stronger, truthful resume bullet based only on supported evidence."
+    )
+    why_it_is_better: str = Field(
+        description="Why this improved bullet is stronger, clearer, or better aligned with the job description."
+    )
+    evidence_used: str = Field(
+        description="The specific resume or project evidence used to create the improved bullet."
+    )
+    honesty_check: str = Field(
+        description="A short explanation confirming the improved bullet is supported and does not invent experience."
+    )
+
 
 class JobMatchAIResponse(BaseModel):
     """
@@ -39,6 +62,14 @@ class JobMatchAIResponse(BaseModel):
     )
     honesty_notes: list[str] = Field(
         description="Warnings about what the candidate should not fake, exaggerate, or claim."
+    )
+    suggested_bullet_improvements: list[SuggestedBulletImprovement] = Field(
+        description=(
+            "Honest resume bullet improvement suggestions. Each suggestion must be grounded "
+            "in the provided resume text and job description. Do not invent companies, job titles, "
+            "internships, professional experience, users, metrics, percentages, leadership, or tools "
+            "that are not supported by the resume."
+        )
     )
 
 
@@ -133,6 +164,15 @@ def analyze_with_placeholder(resume_text: str, job_description: str) -> dict[str
             "Do not claim experience with skills you have not actually used.",
             "Use class projects, personal projects, or portfolio projects honestly instead of fake work experience.",
         ],
+        "suggested_bullet_improvements": [
+            {
+                "original_bullet_or_source_detail": "Fallback analysis used because the AI response was unavailable.",
+                "improved_bullet": "Rewrite one of your existing project bullets with clearer action language, specific technologies, and only outcomes that are already true from your resume.",
+                "why_it_is_better": "This keeps the resume improvement honest while still making the project sound clearer and more technical.",
+                "evidence_used": "The fallback system did not generate evidence-specific bullets, so use only details already present in your resume text.",
+                "honesty_check": "Do not add tools, metrics, users, companies, or professional experience unless they are already supported by your resume.",
+            }
+        ],
     }
 
 
@@ -183,6 +223,24 @@ def analyze_resume_with_ai(
     - If a skill is only implied, mention it in improvement_suggestions instead of matched_skills.
     - If the resume says Next.js but not React, you may say the user should explicitly mention React if they used it, but do not automatically count React as a confirmed matched skill.
     - Treat "nice to have" requirements as gaps, but do not punish the score as heavily as required qualifications.
+
+    Resume bullet improvement rules:
+    - Create 3 to 5 suggested resume bullet improvements when possible.
+    - Each improved bullet must be based only on the provided resume text and job description.
+    - You may rephrase, clarify, strengthen wording, and make supported details more specific.
+    - You may align truthful resume/project experience with the job description.
+    - You may use technologies, tools, and facts only if they are present in the resume text.
+    - Do not invent companies.
+    - Do not invent job titles.
+    - Do not invent internships.
+    - Do not invent professional software engineering experience.
+    - Do not invent production users.
+    - Do not invent leadership experience.
+    - Do not invent metrics, percentages, revenue, scale, or performance numbers.
+    - Do not add tools or skills unless they are supported by the resume text.
+    - If the resume does not provide enough evidence, keep the improved bullet modest.
+    - In evidence_used, explain exactly what resume detail supports the improved bullet.
+    - In honesty_check, clearly say whether the bullet is fully supported or only a modest wording improvement.
 
     Scoring guidance:
     - 90-100: Very strong match.
