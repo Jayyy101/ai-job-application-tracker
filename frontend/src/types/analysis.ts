@@ -37,7 +37,7 @@ export type SavedAnalysis = {
     notes: string | null;
     follow_up_date: string | null;
 
-    match_score:number;
+    match_score: number;
     matched_skills: string[];
     missing_skills: string[];
     summary: string;
