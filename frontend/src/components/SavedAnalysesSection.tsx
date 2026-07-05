@@ -3,10 +3,15 @@
 import { useState } from "react";
 
 import { SavedAnalysisCard } from "@/components/SavedAnalysisCard";
-import type { SavedAnalysis } from "@/types/analysis";
+import type { SavedAnalysis, UpdateAnalysisRequest} from "@/types/analysis";
 
 type SavedAnalysesSectionProps = {
   savedAnalyses: SavedAnalysis[];
+  onUpdateAnalysis: (
+    analysisId: number,
+    updates: UpdateAnalysisRequest
+  ) => Promise<SavedAnalysis>;
+  onDeleteAnalysis: (analysisId: number) => Promise<void>;
 };
 
 type StatusFilter = "All" | "Interested" | "Applied" | "Interviewing" | "Offer" | "Rejected";
@@ -74,6 +79,8 @@ function getFollowUpTime(followUpDate: string | null) {
 
 export function SavedAnalysesSection({
   savedAnalyses,
+  onUpdateAnalysis,
+  onDeleteAnalysis,
 }: SavedAnalysesSectionProps) {
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -265,7 +272,12 @@ export function SavedAnalysesSection({
           ) : (
             <div className="grid gap-5">
               {filteredAndSortedAnalyses.map((analysis) => (
-                <SavedAnalysisCard key={analysis.id} analysis={analysis} />
+                <SavedAnalysisCard 
+                    key={analysis.id} 
+                    analysis={analysis}
+                    onUpdateAnalysis={onUpdateAnalysis}
+                    onDeleteAnalysis={onDeleteAnalysis}
+                 />
               ))}
             </div>
           )}

@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { CurrentAnalysisCard } from "@/components/CurrentAnalysisCard";
 import { SavedAnalysesSection } from "@/components/SavedAnalysesSection";
 import { StatusBanner } from "@/components/StatusBanner";
-import type { AnalyzeResponse, SavedAnalysis } from "@/types/analysis";
+import type { AnalyzeResponse, SavedAnalysis, UpdateAnalysisRequest} from "@/types/analysis";
 
 export default function Home() {
   const [resumeText, setResumeText] = useState("");
@@ -132,6 +132,73 @@ export default function Home() {
       );
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function handleUpdateSavedAnalysis(
+    analysisId: number,
+    updates: UpdateAnalysisRequest
+  ) {
+    setMessage("");
+    setErrorMessage("");
+
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/analyses/${analysisId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      const updatedAnalysis: SavedAnalysis = await response.json();
+
+      setSavedAnalyses((currentAnalyses) =>
+        currentAnalyses.map((analysis) =>
+          analysis.id === analysisId ? updatedAnalysis : analysis
+        )
+      );
+
+      setMessage("Saved application updated successfully.");
+
+      return updatedAnalysis;
+    } catch (error) {
+      console.error(error);
+      setErrorMessage(
+        "Could not update the saved application. Make sure FastAPI is running."
+      );
+      throw error;
+    }
+  }
+
+  async function handleDeleteSavedAnalysis(analysisId: number) {
+    setMessage("");
+    setErrorMessage("");
+
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/analyses/${analysisId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      setSavedAnalyses((currentAnalyses) =>
+        currentAnalyses.filter((analysis) => analysis.id !== analysisId)
+      );
+
+      setMessage("Saved application deleted successfully.");
+    } catch (error) {
+      console.error(error);
+      setErrorMessage(
+        "Could not delete the saved application. Make sure FastAPI is running."
+      );
+      throw error;
     }
   }
 
@@ -350,7 +417,11 @@ export default function Home() {
           {analysisResult && <CurrentAnalysisCard analysis={analysisResult} />}
         </section>
 
-        <SavedAnalysesSection savedAnalyses={savedAnalyses} />
+        <SavedAnalysesSection 
+          savedAnalyses={savedAnalyses}
+          onUpdateAnalysis={handleUpdateSavedAnalysis}
+          onDeleteAnalysis={handleDeleteSavedAnalysis} 
+        />
       </div>
     </main>
   );

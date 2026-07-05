@@ -48,3 +48,12 @@ export type SavedAnalysis = {
 
     created_at: string;
 };
+
+export type UpdateAnalysisRequest = {
+    company_name: string; 
+    job_title: string;
+    job_link: string;
+    application_status: string;
+    notes: string;
+    follow_up_date: string | null;
+}

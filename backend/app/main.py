@@ -1,7 +1,7 @@
 import re
 from datetime import datetime, date
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from app import models
@@ -31,6 +31,14 @@ class AnalyzeRequest(BaseModel):
     job_title: str | None = None
     job_link: str | None = None
     application_status: str = "Interested"
+    notes: str | None = None
+    follow_up_date: date | None = None
+
+class AnalysisUpdateRequest(BaseModel):
+    company_name: str | None = None
+    job_title: str | None = None
+    job_link: str | None = None
+    application_status: str | None = None
     notes: str | None = None
     follow_up_date: date | None = None
 
@@ -115,6 +123,31 @@ def create_summary(match_score: int) -> str:
 
     return "This resume does not strongly match the job description based on the current keyword check."
 
+def build_saved_analysis_response(analysis: models.Analysis) -> SavedAnalysisResponse:
+    return SavedAnalysisResponse(
+        id=analysis.id,
+        resume_text=analysis.resume_text,
+        job_description=analysis.job_description,
+
+        company_name=analysis.company_name,
+        job_title=analysis.job_title,
+        job_link=analysis.job_link,
+        application_status=analysis.application_status,
+        notes=analysis.notes,
+        follow_up_date=analysis.follow_up_date,
+
+        match_score=analysis.match_score,
+        matched_skills=analysis.matched_skills,
+        missing_skills=analysis.missing_skills,
+        summary=analysis.summary,
+        strengths=analysis.strengths,
+        improvement_suggestions=analysis.improvement_suggestions,
+        honesty_notes=analysis.honesty_notes,
+        suggested_bullet_improvements=analysis.suggested_bullet_improvements,
+
+        created_at=analysis.created_at,
+    )
+
 
 @app.get("/health")
 def health_check():
@@ -126,30 +159,53 @@ def get_saved_analyses(db: Session = Depends(get_db)):
     saved_analyses = db.query(models.Analysis).order_by(models.Analysis.id.desc()).all()
 
     return [
-        SavedAnalysisResponse(
-            id=analysis.id,
-            resume_text=analysis.resume_text,
-            job_description=analysis.job_description,
-
-            company_name=analysis.company_name,
-            job_title=analysis.job_title,
-            job_link=analysis.job_link,
-            application_status=analysis.application_status,
-            notes=analysis.notes,
-            follow_up_date=analysis.follow_up_date,
-
-            match_score=analysis.match_score,
-            matched_skills=analysis.matched_skills,
-            missing_skills=analysis.missing_skills,
-            summary=analysis.summary,
-            strengths=analysis.strengths,
-            improvement_suggestions=analysis.improvement_suggestions,
-            honesty_notes=analysis.honesty_notes,
-            suggested_bullet_improvements=analysis.suggested_bullet_improvements,
-            created_at=analysis.created_at,
-        )
+        build_saved_analysis_response(analysis)
         for analysis in saved_analyses
     ]
+
+@app.put("/analyses/{analysis_id}", response_model=SavedAnalysisResponse)
+def update_saved_analysis(
+    analysis_id: int,
+    request: AnalysisUpdateRequest,
+    db: Session = Depends(get_db),
+):
+    saved_analysis = (
+        db.query(models.Analysis)
+        .filter(models.Analysis.id == analysis_id)
+        .first()
+    )
+
+    if saved_analysis is None:
+        raise HTTPException(status_code=404, detail="Saved analysis not found")
+    
+    update_data = request.model_dump(exclude_unset=True)
+
+    for field_name, field_value in update_data.items():
+        setattr(saved_analysis, field_name, field_value)
+
+    db.commit()
+    db.refresh(saved_analysis)
+
+    return build_saved_analysis_response(saved_analysis)
+
+@app.delete("/analyses/{analysis_id}")
+def delete_saved_analysis(analysis_id: int, db: Session = Depends(get_db)):
+    saved_analysis = (
+        db.query(models.Analysis)
+        .filter(models.Analysis.id == analysis_id)
+        .first()
+    )
+
+    if saved_analysis is None:
+        raise HTTPException(status_code=404, detail="saved analysis not found")
+    
+    db.delete(saved_analysis)
+    db.commit()
+
+    return {
+        "message": "Saved analysis deleted successfully",
+        "deleted_id": analysis_id,
+    }
 
 
 @app.post("/analyze", response_model=AnalyzeResponse)
