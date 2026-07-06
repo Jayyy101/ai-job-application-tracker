@@ -7,7 +7,9 @@ import { CurrentAnalysisCard } from "@/components/CurrentAnalysisCard";
 import { DashboardStats } from "@/components/DashboardStats";
 import { SavedAnalysesSection } from "@/components/SavedAnalysesSection";
 import { StatusBanner } from "@/components/StatusBanner";
-import type { AnalyzeResponse, SavedAnalysis, UpdateAnalysisRequest} from "@/types/analysis";
+import type { AnalyzeResponse, SavedAnalysis, UpdateAnalysisRequest } from "@/types/analysis";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 export default function Home() {
   const [resumeText, setResumeText] = useState("");
@@ -32,7 +34,7 @@ export default function Home() {
 
   const fetchSavedAnalyses = useCallback(async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/analyses");
+      const response = await fetch(`${API_BASE_URL}/analyses`);
 
       if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
@@ -54,7 +56,7 @@ export default function Home() {
 
     async function loadSavedAnalyses() {
       try {
-        const response = await fetch("http://127.0.0.1:8000/analyses");
+        const response = await fetch(`${API_BASE_URL}/analyses`);
 
         if (!response.ok) {
           throw new Error(`Request failed with status ${response.status}`);
@@ -98,7 +100,7 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/analyze", {
+      const response = await fetch(`${API_BASE_URL}/analyze`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -144,7 +146,7 @@ export default function Home() {
     setErrorMessage("");
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/analyses/${analysisId}`, {
+      const response = await fetch(`${API_BASE_URL}/analyses/${analysisId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -181,7 +183,7 @@ export default function Home() {
     setErrorMessage("");
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/analyses/${analysisId}`, {
+      const response = await fetch(`${API_BASE_URL}/analyses/${analysisId}`, {
         method: "DELETE",
       });
 

@@ -1,6 +1,8 @@
+import os
 import re
 from datetime import datetime, date
 
+from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -10,13 +12,16 @@ from app.database import Base, engine, get_db
 from sqlalchemy.orm import Session
 
 
+load_dotenv()
+
+frontend_origin = os.getenv("FRONTEND_ORIGIN", "http://localhost:3000")
 app = FastAPI(title="AI Job Tracker API")
 
 Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[frontend_origin],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
