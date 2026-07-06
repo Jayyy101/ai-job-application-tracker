@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 
 
 import { CurrentAnalysisCard } from "@/components/CurrentAnalysisCard";
+import { DashboardStats } from "@/components/DashboardStats";
 import { SavedAnalysesSection } from "@/components/SavedAnalysesSection";
 import { StatusBanner } from "@/components/StatusBanner";
 import type { AnalyzeResponse, SavedAnalysis, UpdateAnalysisRequest} from "@/types/analysis";
@@ -416,6 +417,8 @@ export default function Home() {
 
           {analysisResult && <CurrentAnalysisCard analysis={analysisResult} />}
         </section>
+
+        <DashboardStats savedAnalyses={savedAnalyses} />
 
         <SavedAnalysesSection 
           savedAnalyses={savedAnalyses}
