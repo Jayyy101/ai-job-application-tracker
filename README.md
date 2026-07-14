@@ -171,13 +171,29 @@ npm run build
 
 ## Screenshots / Demo
 
-Screenshots will be added to show the main user workflow:
+### Main Input Form
 
-- Job application input form
-- AI-generated match analysis result
-- Saved applications dashboard
-- Search, filtering, sorting, and dashboard stats
-- Edit and delete workflow for saved applications
+The main form collects job tracking details, notes, resume text, and the job description before running the AI-powered match analysis.
+
+![Main input form](docs/screenshots/01-main-form.png)
+
+### AI Match Analysis Result
+
+After submitting the form, the app returns a structured match analysis with a match score, AI summary, matched skills, missing skills, strengths, improvement suggestions, honesty notes, and resume bullet feedback.
+
+![AI match analysis result](docs/screenshots/02-ai-analysis-result.png)
+
+### Saved Applications Dashboard
+
+Saved analyses are persisted locally and shown in a dashboard with summary stats, application status counts, match scores, follow-up dates, and saved application cards.
+
+![Saved applications dashboard](docs/screenshots/03-saved-dashboard.png)
+
+### Search, Filter, Sort, and Expanded Analysis
+
+Saved analyses can be searched, filtered by status, sorted by match score or date, and expanded to review the full AI-generated feedback.
+
+![Search, filter, sort, and expanded analysis](docs/screenshots/04-filter-expanded-card.png)
 
 ## What I Learned
 
