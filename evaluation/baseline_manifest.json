@@ -1,0 +1,10 @@
+{
+  "source_commit": "72192053a961ce47410bfd0f0b358ae46f83368c",
+  "source_file": "backend/app/ai_service.py",
+  "source_sha256": "f2f7ab3290d901b4d8337a74cb907b29a2587f56f1082f222dddd9a717636cf0",
+  "system_prompt_sha256": "4a265aebca41b7e27182891b4f2e76735c805bbe15f5f933f8c6de5590a1463a",
+  "configured_model_at_capture": "gpt-5.4-mini",
+  "snapshot_provenance": "Alias only; no historical response model identifiers are recorded.",
+  "measured_live_runs": 0,
+  "fallback": "Keyword matcher is a separate deterministic baseline; do not mix it with live-model results."
+}

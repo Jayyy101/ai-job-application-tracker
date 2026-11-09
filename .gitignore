@@ -26,3 +26,39 @@ backend/job_tracker.db
 
 .env
 backend/.env
+
+# Isolated tracker development data (never the legacy database)
+backend/.local/
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+frontend/.next-preview/
+frontend/.next-build/
+
+# Optional fresh-checkout Python environment
+.venv/
+
+# Local recorded walkthroughs and synthetic recording databases
+artifacts/walkthrough/
+
+# Cross-machine private configuration and local data (templates are safe to share)
+.env.*
+!.env.example
+!.env.local.example
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3-*
+*.pem
+*.key
+*.p12
+*.pfx
+# Keep user documents and generated exports outside source folders
+private/
+local-data/
+exports/
+*.mp4
+*.mov
+*.webm
+*.tsbuildinfo
