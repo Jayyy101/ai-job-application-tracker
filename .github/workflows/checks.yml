@@ -58,7 +58,6 @@ jobs:
       NEXT_PUBLIC_TRACKER_API_URL: http://127.0.0.1:43128
       TRACKER_PREVIEW_API: http://127.0.0.1:43128
       TRACKER_TEST_PYTHON: python
-      TRACKER_ARTIFACTS_PARENT: ${{ runner.temp }}/jobfolio-browser
     steps:
       - uses: actions/checkout@v7
         with:
@@ -88,6 +87,8 @@ jobs:
       - run: npm run build
         working-directory: frontend
       - name: Isolated production-browser suite
+        env:
+          TRACKER_ARTIFACTS_PARENT: ${{ runner.temp }}/jobfolio-browser
         run: node scripts/ci-browser.mjs
       - name: Synthetic screenshots and results
         if: always()
