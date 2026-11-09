@@ -1,0 +1,4 @@
+# Keep source bytes and prompt/baseline hashes consistent on Windows and Unix.
+* text=auto eol=lf
+*.png binary
+*.ico binary

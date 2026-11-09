@@ -5,6 +5,7 @@ import sqlite3
 import sys
 import tempfile
 import unittest
+from network_guard import block_external_network
 from datetime import date
 from pathlib import Path
 from unittest.mock import patch
@@ -23,7 +24,7 @@ class TrackerTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="tracker-api-test-")
         self.path = Path(self.temp.name) / "isolated.sqlite3"
-        self.network = patch("socket.socket.connect", side_effect=AssertionError("No network calls allowed in API tests"))
+        self.network = block_external_network()
         self.network.start()
         self.client_context = TestClient(create_app(self.path), raise_server_exceptions=False)
         self.client = self.client_context.__enter__()

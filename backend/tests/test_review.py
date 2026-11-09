@@ -4,6 +4,7 @@ import os
 import sqlite3
 import tempfile
 import unittest
+from network_guard import block_external_network
 from pathlib import Path
 from unittest.mock import patch, Mock
 from uuid import uuid4
@@ -27,7 +28,7 @@ class ReviewTests(unittest.TestCase):
         self.path = Path(self.temp.name) / 'test.sqlite3'
         self.env = patch.dict(os.environ, {'TRACKER_REVIEW_MODE': 'mock'})
         self.env.start()
-        self.network = patch('socket.socket.connect', side_effect=AssertionError('No paid/network calls in tests'))
+        self.network = block_external_network()
         self.network.start()
         self.context = TestClient(create_app(self.path), raise_server_exceptions=False)
         self.client = self.context.__enter__()

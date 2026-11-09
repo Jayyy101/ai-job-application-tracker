@@ -15,7 +15,7 @@ Built with Next.js, React, TypeScript, Tailwind, FastAPI, Pydantic, SQLAlchemy, 
 - Real server-side OpenAI Responses integration with structured output, source validation, provenance and available usage. **Live integration has not been exercised; no paid calls or model comparisons were made.**
 - A fixed synthetic mock provider for exercising persistence, and a separate hand-authored demo at `/review`. Neither is evidence of model quality.
 - Explicit legacy-copy import with dry run, repeat-import detection, transaction rollback, and a backup procedure. Existing saved data has not been migrated.
-- GitHub Actions for isolated backend/evaluation tests, export tests, frontend lint/type/build, and the production-browser suite. Hosted execution remains unverified until the workflow is run on GitHub.
+- GitHub Actions for isolated backend/evaluation tests, export tests, frontend lint/type/build, and the production-browser suite. Backend/evaluation jobs cover Ubuntu and Windows; frontend/browser checks run on Ubuntu. See [GitHub Actions](https://github.com/Jayyy101/ai-job-application-tracker/actions/workflows/checks.yml) for hosted results.
 - Isolated API/browser tests and an offline evaluation harness. Evaluation expectations remain drafts, with zero measured model runs.
 
 **Not included:** PDF/DOCX parsing, public hosting/authentication, multi-user ownership, automatic document deletion/retention, model comparisons, or calibrated fit scores. No ATS scores or hiring probabilities are presented by the new review flow.
@@ -40,7 +40,7 @@ npm.cmd ci
 Set-Location ..
 ```
 
-Use the virtual environment's executable directly; no activation or execution-policy change is necessary. `npm.cmd` / `npx.cmd` also avoid PowerShell's script-execution-policy restriction on `npm.ps1`. Dependency versions are preserved; `uvloop` is excluded on Windows and Uvicorn uses the standard asyncio loop there.
+Use the virtual environment's executable directly; no activation or execution-policy change is necessary. `npm.cmd` / `npx.cmd` also avoid PowerShell's script-execution-policy restriction on `npm.ps1`. Source files use LF line endings via `.gitattributes` to preserve baseline/prompt hashes across systems. Dependency versions are preserved; `uvloop` is excluded on Windows and Uvicorn uses the standard asyncio loop there.
 
 **Terminal 1 — backend**, starting in the cloned repository root:
 
@@ -297,7 +297,7 @@ python -B -m unittest discover -s evaluation -v
 python -B evaluation/harness.py score --split development --output /tmp/jobfolio-eval.json
 ```
 
-API tests use temporary databases and block outbound sockets. Browser tests start their own backend/database and an extension-free Chrome profile, redirect API calls to that test backend, block external requests, and stop only their own processes. They cover the persisted review workflow, duplicate/lost-response recovery, version immutability, invalid citations (API), archive/restore, labels/focus, mobile layout and hydration warnings. No blanket hydration suppression is used. These are smoke checks, not a complete accessibility audit.
+API tests use temporary databases and block external connections; literal loopback is allowed for Windows asyncio internals. Browser tests start their own backend/database and an extension-free Chrome profile, redirect API calls to that test backend, block external requests, and stop only their own processes. They cover the persisted review workflow, duplicate/lost-response recovery, version immutability, invalid citations (API), archive/restore, labels/focus, mobile layout and hydration warnings. No blanket hydration suppression is used. These are smoke checks, not a complete accessibility audit.
 
 The browser driver discovers macOS, Linux and Windows Chrome; `TRACKER_CHROME_PATH`, `TRACKER_TEST_PYTHON`, `TRACKER_PREVIEW_URL`, and `TRACKER_PREVIEW_API` support local overrides. It prints temporary screenshots/results. The installed Starlette test client emits an upstream httpx deprecation warning; no dependencies were changed to suppress it.
 
@@ -315,7 +315,7 @@ TRACKER_TEST_PYTHON="$(command -v python)" node scripts/ci-browser.mjs
 
 It starts and stops only its own processes; an existing preview is not used or interrupted. Default Chrome discovery supports macOS, Windows installation locations and Linux PATH; `TRACKER_CHROME_PATH` is an explicit override. The Node CSV tests may emit a harmless module-format detection warning without changing the project’s existing package mode.
 
-The workflow YAML and job commands were checked locally, including backend tests from a clean source copy without databases or `.env` files. **GitHub-hosted execution, Linux package installation and artifact upload remain unverified until the workflow runs on GitHub.** See the latest handoff below and the repository’s Actions tab for subsequent hosted results. Current action/runner choices follow [GitHub’s setup-node](https://github.com/actions/setup-node), [setup-python](https://github.com/actions/setup-python), and [Ubuntu runner inventory](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md).
+The commands are checked locally on macOS, including an isolated production browser run. Hosted jobs install dependencies from scratch and run backend/evaluation checks on Ubuntu and Windows, plus lint/types/build/export/browser checks on Ubuntu. [The Actions history](https://github.com/Jayyy101/ai-job-application-tracker/actions/workflows/checks.yml) is the source of truth for each pushed commit; local passes and hosted passes are separate evidence. Actual Windows desktop/browser and recording use remain unverified. Current action/runner choices follow [GitHub’s setup-node](https://github.com/actions/setup-node), [setup-python](https://github.com/actions/setup-python), and [Ubuntu runner inventory](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md).
 
 See [the focused implementation review](docs/final-focused-review.md) for confirmed defects, regressions and remaining concerns. Valid schemas, exact quotations and mocks are not model-accuracy measurements.
 

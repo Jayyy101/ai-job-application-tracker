@@ -7,6 +7,7 @@ import tempfile
 import threading
 import time
 import unittest
+from network_guard import block_external_network
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from pathlib import Path
@@ -33,7 +34,7 @@ class FinalPassTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(prefix='jobfolio-final-pass-')
         self.path = Path(self.temp.name) / 'isolated.sqlite3'
         self.mode = patch.dict(os.environ, {'TRACKER_REVIEW_MODE': 'mock'})
-        self.network = patch('socket.socket.connect', side_effect=AssertionError('No external calls allowed'))
+        self.network = block_external_network()
         self.mode.start(); self.network.start()
         self.context = TestClient(create_app(self.path), raise_server_exceptions=False)
         self.client = self.context.__enter__()
